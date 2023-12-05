@@ -16,7 +16,7 @@ class Terminal(location: String) {
      */
     fun run() {
         while (_isRunning) {
-            val input = getInput("$_location ") ?: continue
+            val input = getInput("$_location > ") ?: continue
             val result = _interpreter.process(input)
             result.execute()
 
