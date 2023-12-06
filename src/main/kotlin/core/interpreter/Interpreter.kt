@@ -1,8 +1,21 @@
 package core.interpreter
 
+import core.command.Command
+import core.execution.Executable
+
 /**
  *
  */
-interface Interpreter {
-    fun process(s: String): Result
+class Interpreter(commands: Array<Command>) {
+
+    private val _commands = commands
+
+    /**
+     *
+     */
+    fun process(s: String): Executable? {
+        val parser = Parser(s)
+        return parser.parse(_commands)
+    }
+
 }

@@ -4,5 +4,5 @@ package core.execution
  *
  */
 interface Executable {
-    fun execute()
+    fun execute(caller: Any)
 }

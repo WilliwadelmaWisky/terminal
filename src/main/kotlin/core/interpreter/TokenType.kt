@@ -4,11 +4,11 @@ package core.interpreter
  *
  */
 enum class TokenType {
-    Command,
-    Flag,
     Text,
     Number,
-    Split,
+    Flag,
+    Pipe,
+    Input,
     Output,
     Whitespace,
     EndOfFile,

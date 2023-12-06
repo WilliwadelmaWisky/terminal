@@ -57,7 +57,7 @@ class Lexer(text: String) {
             }
 
             _position++
-            val text = _text.substring(start, _position)
+            val text = _text.substring(start + 1, _position - 1)
             return SyntaxToken(TokenType.Text, text, null)
         }
 
@@ -69,7 +69,7 @@ class Lexer(text: String) {
                 _position++
 
             val text = _text.substring(start, _position)
-            return SyntaxToken(TokenType.Command, text, null)
+            return SyntaxToken(TokenType.Text, text, null)
         }
 
         if (getCurrent().isDigit()) {
@@ -88,6 +88,25 @@ class Lexer(text: String) {
                 _position++
 
             return SyntaxToken(TokenType.Whitespace, " ", null)
+        }
+
+        when (getCurrent()) {
+            '|' -> {
+                _position++
+                return SyntaxToken(TokenType.Pipe, "|", null)
+            }
+            '<' -> {
+                _position++
+                return SyntaxToken(TokenType.Input, "<", null)
+            }
+            '>' -> {
+                _position++
+                return SyntaxToken(TokenType.Output, ">", null)
+            }
+            else -> {
+                while (!getCurrent().isWhitespace() && !isEndOfFile())
+                    _position++
+            }
         }
 
         return SyntaxToken(TokenType.BadToken, "", null)
