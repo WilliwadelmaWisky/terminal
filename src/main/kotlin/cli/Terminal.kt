@@ -1,6 +1,6 @@
 package cli
 
-import core.command.*
+import core.command.CommandInfo
 import core.interpreter.Interpreter
 import core.output.Output
 import core.process.Process
@@ -9,11 +9,11 @@ import core.util.getInput
 /**
  *
  */
-class Terminal(location: String) : Process, Output {
+class Terminal(location: String, commands: Array<CommandInfo>) : Process, Output {
 
-    private val _interpreter = Interpreter(arrayOf(Clear(), Exit(), Man(), Cd(), Ls()))
+    private val _interpreter = Interpreter(commands)
     private var _isRunning: Boolean = true
-    private var _location: String = location
+    private var _path = Path(location)
 
 
     /**
@@ -21,9 +21,9 @@ class Terminal(location: String) : Process, Output {
      */
     fun run() {
         while (_isRunning) {
-            val input = getInput("$_location > ") ?: continue
-            val executable = _interpreter.process(input)
-            executable?.execute(this)
+            val input = getInput("${_path.getValue()} > ") ?: continue
+            val command = _interpreter.process(input)
+            command?.execute(_path, this)
         }
     }
 
@@ -35,10 +35,6 @@ class Terminal(location: String) : Process, Output {
         _isRunning = false
         println("Goodbye")
     }
-
-
-    fun getLocation(): String { return _location }
-    fun setLocation(loc: String) { _location = loc }
 
 
     override fun println(message: String) {

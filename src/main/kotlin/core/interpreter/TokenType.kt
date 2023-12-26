@@ -8,6 +8,7 @@ enum class TokenType {
     Number,
     Flag,
     Pipe,
+    And,
     Input,
     Output,
     Whitespace,

@@ -1,23 +1,24 @@
 package core.interpreter
 
 import core.command.Command
-import core.command.MasterCommand
-import core.execution.Executable
-import core.execution.ExecutableCommand
-import core.execution.Error
+import core.command.CommandInfo
+import core.command.Flag
+import core.command.HasArgs
 
 /**
  *
  */
-class Parser(text: String) {
+class Parser(text: String, commands: Array<CommandInfo>) {
 
-    private val _list: ArrayList<SyntaxToken> = arrayListOf()
+    private val _tokenList = arrayListOf<SyntaxToken>()
+    private val _commands = commands
 
 
     /**
      *
      */
     init {
+        println("---- LEX ----")
         val lexer = Lexer(text)
         while (true) {
             val token = lexer.next()
@@ -28,71 +29,79 @@ class Parser(text: String) {
                 continue
 
             println("[DEBUG] Found token (${token.getType()}): ${token.getText()}")
-            _list.add(token)
+            _tokenList.add(token)
         }
     }
 
 
-    fun parse(commands: Array<Command>): Executable? {
+    /**
+     *
+     */
+    fun parse(): Command? {
+
+        var position = 0
+        val token = get(position)
+        if (token.getType() != TokenType.Text)
+            return null
 
         println("---- PARSE ----")
-        val commandStack = ArrayDeque<Command>()
-        val flagList: ArrayList<String> = arrayListOf()
-        val argList: ArrayList<Any> = arrayListOf()
-        var position = 0
-
-        var currentCommand: Command = findCommand(get(position).getText(), commands) ?: return null
+        var currentCommandInfo = _commands.find { c -> c.getName() == token.getText() } ?: return null
+        val command = Command(currentCommandInfo)
+        var currentCommand = command
+        var current: HasArgs = command
         position++
 
         while (true) {
-            if (position >= _list.count())
+            if (position >= _tokenList.count())
                 break;
 
             when (get(position).getType()) {
                 TokenType.Text -> {
-                    if (currentCommand is MasterCommand) {
-                        if (flagList.isNotEmpty() || argList.isNotEmpty()) {
-                            return Error("Syntax error")
-                        }
-
-                        currentCommand = findCommand(get(position).getText(), currentCommand.getCommands()) ?: break
+                    val subcommandInfo = currentCommandInfo.findSubcommand(get(position).getText())
+                    if (subcommandInfo != null) {
+                        val subcommand = Command(subcommandInfo)
+                        currentCommand.setSubcommand(subcommand)
+                        currentCommandInfo = subcommandInfo
+                        currentCommand = subcommand
+                        current = subcommand
                     } else {
-                        argList.add(get(position).getText())
+                        current.append(get(position).getText())
                     }
                 }
 
                 TokenType.Flag -> {
-                    flagList.add(get(position).getText())
+                    val flag = Flag(get(position).getText())
+                    if (currentCommandInfo.isValidFlag(flag)) {
+                        currentCommand.addFlag(flag)
+                        current = flag
+                    }
                 }
 
                 TokenType.Number -> {
-                    argList.add(get(position).getText())
+                    current.append(get(position).getText())
+                }
+
+                TokenType.And -> {
+                    println("And character encountered")
                 }
 
                 TokenType.Pipe -> {
                     println("Pipe character encountered")
                 }
 
-                else -> break
+                else -> {
+                    println("Ignored token!")
+                }
             }
 
             position++
         }
 
-        val flags = arrayOfNulls<String>(flagList.size)
-        flagList.toArray(flags)
-        val args = arrayOfNulls<Any>(argList.size)
-        argList.toArray(args)
-
-        return ExecutableCommand(currentCommand, flags, args)
+        return command
     }
 
-
-    private fun findCommand(name: String, commands: Array<Command>): Command? {
-        return commands.find { c -> c.getName() == name }
-    }
 
     private fun get(index: Int): SyntaxToken {
-        return _list[index]
+        return _tokenList[index]
     }
 }

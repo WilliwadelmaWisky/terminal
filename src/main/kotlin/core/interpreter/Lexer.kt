@@ -103,6 +103,10 @@ class Lexer(text: String) {
                 _position++
                 return SyntaxToken(TokenType.Output, ">", null)
             }
+            '&' -> {
+                _position++
+                return SyntaxToken(TokenType.And, "&", null)
+            }
             else -> {
                 while (!getCurrent().isWhitespace() && !isEndOfFile())
                     _position++
