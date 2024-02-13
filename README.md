@@ -2,7 +2,7 @@
 
 A Terminal for custom functionality. No dependencies required.
 
-Work in Progress
+Work in Progress 
 
 ## Installation
 NOT READY TO BE USED
